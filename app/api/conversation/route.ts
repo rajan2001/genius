@@ -1,10 +1,17 @@
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const instruction: ChatCompletionMessageParam = {
+  role: "system",
+  content:
+    "कृषक से संबंधित जानकारी प्राप्त करने के लिए विस्तार से बताएं",
+};
 
 export async function POST(req: Request) {
   try {
@@ -26,9 +33,10 @@ export async function POST(req: Request) {
     }
 
     const response = await openai.chat.completions.create({
-      messages: [messages],
+      messages: [instruction, messages],
       model: "gpt-3.5-turbo",
     });
+
 
     return NextResponse.json(response.choices[0].message);
   } catch (error) {
