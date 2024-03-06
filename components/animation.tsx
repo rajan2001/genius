@@ -9,7 +9,7 @@ return(
       src="./farmer.json"
       style={{
         height: "auto",
-        width: "85%",
+        width: "100%",
       }}
     />
 )
