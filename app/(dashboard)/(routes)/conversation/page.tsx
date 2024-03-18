@@ -12,14 +12,6 @@ import Loader from "@/components/loader";
 import Markdown from "react-markdown";
 
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import Empty from "@/components/empty";
@@ -34,27 +26,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const Crops = [
-  "Cotton",
-  "Jute",
-  "Oilseeds",
-  "Sugarcane",
-  "Tobacco",
-  "Rice",
-  "Wheat",
-  "Millets",
-  "Maize",
-  "Pulses",
-  "Tea",
-  "Coffee",
-  "Rubber",
-];
-
 const ConversationPage = () => {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [crops, setCrops] = useState([]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -89,22 +66,26 @@ const ConversationPage = () => {
 
   useEffect(() => {
     const StateData = async () => {
-      await fetch(
-        "https://countriesnow.space/api/v0.1/countries/states/q?country=India"
-      )
+      await fetch("http://localhost:3001/states")
         .then((res) => res.json())
-        .then((res) => setStates(res.data.states));
+        .then((res) => setStates(res));
     };
 
     StateData();
   }, []);
 
-  const handleChange = async (e: any) => {
-    await fetch(
-      `https://countriesnow.space/api/v0.1/countries/state/cities/q?country=India&state=${e}`
-    )
+  const handleState = async (e: any) => {
+    await fetch(`http://localhost:3001/states/cities?name=${e}`)
       .then((res) => res.json())
-      .then((res) => setCities(res.data));
+      .then((res) => setCities(res));
+
+      
+  };
+
+  const handleCity = async (e: any) => {
+    await fetch(`http://localhost:3001/cities/crops?name=${e}`)
+      .then((res) => res.json())
+      .then((res) => setCrops(res));
   };
 
   return (
@@ -117,98 +98,45 @@ const ConversationPage = () => {
         bgColor="bg-violet-500/10"
       />
       <div className="px-4 lg:px-8">
-        <div>
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="rounded-lg border w-full p-4 px-3 md:px-6 grid grid-cols-12 grid-rows-2 gap-2 focus-whithin:shadow-sm ">
-              <FormField
-                control={form.control}
-                name="state"
-                render={({ field }) => (
-                  <FormItem className="col-span-6 lg:col-span-4">
-                    <FormControl className="m-0 p-0">
-                      <Select onValueChange={(e) => handleChange(e)}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="State" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {states.map((state: any) => (
-                            <SelectItem key={state.name} value={state.name}>
-                              {state.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+        <div className="grid grid-cols-3 border-stone-200 rounded border-2 p-6 gap-4">
+          <Select onValueChange={(e) => handleState(e)} >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="State" />
+            </SelectTrigger>
+            <SelectContent>
+              {states.map((state: any) => (
+                <SelectItem key={state.name} value={state.name}>
+                  {state.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem className="col-span-6 lg:col-span-4 w-full h-full">
-                    <FormControl className="m-0 p-0">
-                      <Select
-                        disabled={cities.length === 0}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="City" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cities.map((city: any) => (
-                            <SelectItem key={city} value={city}>
-                              {city}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <Select onValueChange={(e) => handleCity(e)} disabled={cities.length === 0}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="City" />
+            </SelectTrigger>
+            <SelectContent>
+              {cities.map((city: any) => (
+                <SelectItem key={city.name} value={city.name}>
+                  {city.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-              <FormField
-                control={form.control}
-                name="farming"
-                render={({ field }) => (
-                  <FormItem className="col-span-6 lg:col-span-4 w-full h-full">
-                    <FormControl className="m-0 p-0">
-                      <Select
-                        disabled={cities.length === 0}
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Crops" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Crops.map((crop) => (
-                            <SelectItem value={crop} key={crop}>
-                              {crop}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button
-                disabled={isLoading}
-                type="submit"
-                className="col-span-12 ">
-                Generate
-              </Button>
-            </form>
-          </Form>
+          <Select disabled={crops.length === 0} >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Crops" />
+            </SelectTrigger>
+            <SelectContent>
+              {crops.map((crop: any) => (
+                <SelectItem key={crop.name} value={crop.name}>
+                  {crop.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-4 mt-4">
           {isLoading && (
