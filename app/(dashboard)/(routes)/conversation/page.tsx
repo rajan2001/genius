@@ -2,19 +2,9 @@
 
 import Heading from "@/components/heading";
 import { TreePine } from "lucide-react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { any, z } from "zod";
-import { formSchema } from "./constants";
 import { useEffect, useState } from "react";
 
-import Loader from "@/components/loader";
-
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-
-import Empty from "@/components/empty";
-import { cn } from "@/lib/utils";
 
 import {
   Select,
@@ -25,19 +15,18 @@ import {
 } from "@/components/ui/select";
 import InformationCard from "@/components/InformationCard";
 
+const inMemoryObject = {
+  district: "",
+  crop: "",
+};
+
 const ConversationPage = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [crops, setCrops] = useState([]);
   const [info, setInfo] = useState([]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      state: "",
-      city: "",
-    },
-  });
+  const [capture, setCapture] = useState(inMemoryObject);
+  const [bool, setbool] = useState(false);
 
   useEffect(() => {
     const StateData = async () => {
@@ -59,12 +48,19 @@ const ConversationPage = () => {
     await fetch(`http://localhost:3001/cities/crops?name=${e}`)
       .then((res) => res.json())
       .then((res) => setCrops(res));
+    setCapture({ ...capture, district: e });
   };
 
   const handleSearch = async () => {
-    await fetch(`http://localhost:3001/cities/crops/info?crop=Rice&city=RAMGARH`)
+    await fetch(
+      `http://localhost:3001/cities/crops/info?crop=${capture.crop}&city=${capture.district}`
+    )
       .then((res) => res.json())
       .then((res) => setInfo(res));
+
+    setbool(true);
+    setCities([]);
+    setCrops([]);
   };
 
   return (
@@ -106,7 +102,9 @@ const ConversationPage = () => {
             </SelectContent>
           </Select>
 
-          <Select disabled={crops.length === 0}>
+          <Select
+            disabled={crops.length === 0}
+            onValueChange={(e) => setCapture({ ...capture, crop: e })}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Crops" />
             </SelectTrigger>
@@ -128,18 +126,8 @@ const ConversationPage = () => {
           </div>
         </div>
         <div className="space-y-4 mt-4">
-          {/* {isLoading && (
-            <div className="p-8 rounded-lg w-full flex items-center justify-center bg-muted h-full">
-              <Loader />
-            </div>
-          )}
-           (
-            <div>
-              <Empty label="No conversation started" />
-            </div>
-          ) */}
           <div className="flex flex-col gap-y-4">
-            <InformationCard info={info} />
+            {bool ? <InformationCard info={info} /> : null}
           </div>
         </div>
       </div>
