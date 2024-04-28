@@ -14,7 +14,7 @@ const montserrat = Montserrat({ weight: "600", subsets: ["latin"] });
 
 const LandingPage = () => {
   return (
-    <div className="flex  flex-col-reverse justify-center items-center h-screen">
+    <div className="flex  flex-col-reverse justify-center items-center h-screen ">
       <div className="flex justify-center gap-6">
         <Link href="/sign-in">
           <Button>Login</Button>
